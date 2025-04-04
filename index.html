@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="shortcut icon" href="./favicon.ico"type="image/x-icon">
     <link rel="shortcut icon" href="./android-chrome-192x192.png"type="image/x-icon">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ping-Pong</title>
     <style>
       * {
@@ -13,10 +13,27 @@
         margin: 0;
         padding: 0;
         touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
       canvas {
         display: block;
         touch-action: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
       }
     </style>
   </head>
@@ -196,8 +213,20 @@
       }
 
       function setup() {
-        canvasEl.width = canvasCtx.width = window.innerWidth
-        canvasEl.height = canvasCtx.height = window.innerHeight
+        // Ajusta o tamanho do canvas para o tamanho real da tela
+        const dpr = window.devicePixelRatio || 1
+        const rect = canvasEl.getBoundingClientRect()
+        
+        canvasEl.width = rect.width * dpr
+        canvasEl.height = rect.height * dpr
+        
+        canvasCtx.scale(dpr, dpr)
+        
+        canvasEl.style.width = `${rect.width}px`
+        canvasEl.style.height = `${rect.height}px`
+        
+        field.w = rect.width
+        field.h = rect.height
       }
 
       function draw() {
@@ -234,20 +263,21 @@
 
       // Eventos de mouse
       canvasEl.addEventListener("mousemove", function (e) {
-        mouse.x = e.pageX
-        mouse.y = e.pageY
+        const rect = canvasEl.getBoundingClientRect()
+        mouse.x = e.clientX - rect.left
+        mouse.y = e.clientY - rect.top
       })
 
       // Eventos touch
       canvasEl.addEventListener("touchstart", function(e) {
         e.preventDefault()
         updateTouchPosition(e)
-      })
+      }, { passive: false })
 
       canvasEl.addEventListener("touchmove", function(e) {
         e.preventDefault()
         updateTouchPosition(e)
-      })
+      }, { passive: false })
 
       function updateTouchPosition(e) {
         const touch = e.touches[0]
@@ -256,10 +286,19 @@
         mouse.y = touch.clientY - rect.top
       }
 
-      // Prevenir scroll em dispositivos móveis
-      document.body.addEventListener("touchmove", function(e) {
+      // Prevenir scroll e zoom em dispositivos móveis
+      document.addEventListener("touchmove", function(e) {
         e.preventDefault()
       }, { passive: false })
+
+      // Ajustar tamanho quando a orientação da tela mudar
+      window.addEventListener("resize", function() {
+        setup()
+      })
+
+      window.addEventListener("orientationchange", function() {
+        setTimeout(setup, 100)
+      })
     </script>
   </body>
 </html>
