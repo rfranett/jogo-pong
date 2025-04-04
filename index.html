@@ -45,7 +45,6 @@
         gapX = 10
 
       const mouse = { x: 0, y: 0 }
-      let isDragging = false
 
       const field = {
         w: window.innerWidth,
@@ -92,12 +91,7 @@
         w: line.w,
         h: 200,
         _move: function () {
-          // Movimento suave da raquete
-          const targetY = mouse.y - this.h / 2
-          const speed = 0.3 // Ajuste este valor para controlar a velocidade do movimento
-          
-          this.y += (targetY - this.y) * speed
-          
+          this.y = mouse.y - this.h / 2
           // Limita o movimento da raquete dentro do campo
           if (this.y < 0) this.y = 0
           if (this.y + this.h > field.h) this.y = field.h - this.h
@@ -129,7 +123,6 @@
           // desenho da raquete direita
           canvasCtx.fillStyle = "#ffffff"
           canvasCtx.fillRect(this.x, this.y, this.w, this.h)
-
           this._move()
         },
       }
@@ -270,30 +263,19 @@
 
       // Eventos de mouse
       canvasEl.addEventListener("mousemove", function (e) {
-        const rect = canvasEl.getBoundingClientRect()
-        mouse.x = e.clientX - rect.left
-        mouse.y = e.clientY - rect.top
+        mouse.x = e.pageX
+        mouse.y = e.pageY
       })
 
       // Eventos touch
-      canvasEl.addEventListener("touchstart", function(e) {
-        e.preventDefault()
-        updateTouchPosition(e)
-      }, { passive: false })
-
       canvasEl.addEventListener("touchmove", function(e) {
         e.preventDefault()
-        updateTouchPosition(e)
+        const touch = e.touches[0]
+        mouse.x = touch.pageX
+        mouse.y = touch.pageY
       }, { passive: false })
 
-      function updateTouchPosition(e) {
-        const touch = e.touches[0]
-        const rect = canvasEl.getBoundingClientRect()
-        mouse.x = touch.clientX - rect.left
-        mouse.y = touch.clientY - rect.top
-      }
-
-      // Prevenir scroll e zoom em dispositivos móveis
+      // Prevenir scroll
       document.addEventListener("touchmove", function(e) {
         e.preventDefault()
       }, { passive: false })
