@@ -45,6 +45,7 @@
         gapX = 10
 
       const mouse = { x: 0, y: 0 }
+      let isDragging = false
 
       const field = {
         w: window.innerWidth,
@@ -91,13 +92,16 @@
         w: line.w,
         h: 200,
         _move: function () {
-          this.y = mouse.y
+          if (isDragging) {
+            this.y = mouse.y - this.h / 2
+            // Limita o movimento da raquete dentro do campo
+            if (this.y < 0) this.y = 0
+            if (this.y + this.h > field.h) this.y = field.h - this.h
+          }
         },
         draw: function () {
-          // desenho da raquete esquerda
           canvasCtx.fillStyle = "#ffffff"
           canvasCtx.fillRect(this.x, this.y, this.w, this.h)
-
           this._move()
         },
       }
@@ -268,15 +272,48 @@
         mouse.y = e.clientY - rect.top
       })
 
+      canvasEl.addEventListener("mousedown", function(e) {
+        const rect = canvasEl.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        
+        // Verifica se o clique foi na área da raquete esquerda
+        if (x >= leftPaddle.x && x <= leftPaddle.x + leftPaddle.w &&
+            y >= leftPaddle.y && y <= leftPaddle.y + leftPaddle.h) {
+          isDragging = true
+        }
+      })
+
+      canvasEl.addEventListener("mouseup", function() {
+        isDragging = false
+      })
+
       // Eventos touch
       canvasEl.addEventListener("touchstart", function(e) {
         e.preventDefault()
-        updateTouchPosition(e)
+        const touch = e.touches[0]
+        const rect = canvasEl.getBoundingClientRect()
+        const x = touch.clientX - rect.left
+        const y = touch.clientY - rect.top
+        
+        // Verifica se o toque foi na área da raquete esquerda
+        if (x >= leftPaddle.x && x <= leftPaddle.x + leftPaddle.w &&
+            y >= leftPaddle.y && y <= leftPaddle.y + leftPaddle.h) {
+          isDragging = true
+          updateTouchPosition(e)
+        }
       }, { passive: false })
 
       canvasEl.addEventListener("touchmove", function(e) {
         e.preventDefault()
-        updateTouchPosition(e)
+        if (isDragging) {
+          updateTouchPosition(e)
+        }
+      }, { passive: false })
+
+      canvasEl.addEventListener("touchend", function(e) {
+        e.preventDefault()
+        isDragging = false
       }, { passive: false })
 
       function updateTouchPosition(e) {
